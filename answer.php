@@ -1,7 +1,7 @@
 <?php 
-$dsn = 'mysql:dbname=cake;host=localhost';
-$user = 'okuda';
-$pass = '';
+$dsn = "mysql:dbname=cake;host=localhost";
+$user = "okuda";
+$pass = "";
 $pdo = new PDO($dsn, $user, $password);
 ?>
 
@@ -14,50 +14,47 @@ $pdo = new PDO($dsn, $user, $password);
 </head>
 <body>
     <a href="index.php">戻る</a>
-    <form method="POST" action="<?php print($SERVER['PHP_SELF']) ?>">
+    <form method="POST">
         <input type="text" name="formula"><br>
         <input type="submit" name="btn" value="計算" disabled>
     </form> 
 
     <?php 
         try {
-            $formula = htmlspecialchars($_POST['formula']);
+            $formula = htmlspecialchars($_POST["formula"]);
             $result = sprintf('$answer=%s;', $formula);
             eval($result);
+
             $sql = "INSERT INTO calc (formula, answer) values (:formula, :answer)";
             $statement = $pdo->prepare($sql);
-            $params = array('formula' => $formula, 'answer' => $answer);
+            $params = array("formula" => $formula, "answer" => $answer);
             $statement->execute($params);
             echo $answer;
+
+            $statement2 = $pdo->prepare("SELECT * FROM calc");
+            $statement2->execute();
+            $result = $statement2 -> fetchAll();
             
+            $statement = null;
+            $statement2 = null;
+            $pdo = null;
         } catch (PDOException $e){
-            echo 'DB接続エラー:'. $e->getMessage();
+            echo "DB接続エラー:". $e->getMessage();
         }
-
-
-        //     $pstmt = $pdo->prepare('SELECT * FROM calc');
-        //     $pstmt->execute();
-        //     $result = $pstmt -> fetchAll();
-
-        //     $pstmt = null;
-        //     $pdo = null;
-
-        // } catch (PDOException $e) {
-        //     print "エラー!: " . $e->getMessage() . "<br/gt;";
-        //     die();
-        // }
-
     ?>
 
-
-<!-- 
-    <?php
-    $formula = $_POST['formula'];
-    echo($formula);
-    ?> -->
-
-    
-    
+    <table border = "1">
+        <tr>
+            <th>date</th>
+            <th>answer</th>
+        </tr>
+        <?php for($i = 0; $i < count($result); $i++) { ?>
+            <tr>
+                <td><?php echo mb_substr($result[$i]["created"], 0, 10); ?></td>
+                <td><?php echo $result[$i]["formula"]; ?> = <?php echo $result[$i]["answer"]; ?></td>
+            </tr>
+        <?php } ?>
+    </table>
 </body>
 </html>
 
