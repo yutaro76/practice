@@ -22,9 +22,13 @@ $pdo = new PDO($dsn, $user, $password);
     <?php 
         try {
             $formula = htmlspecialchars($_POST['formula']);
-            $pdo->exec('INSERT INTO calc SET formula="'.$formula.'"');
-            // $result = eval($formula);
-            // echo "$result";
+            $result = sprintf('$answer=%s;', $formula);
+            eval($result);
+            $sql = "INSERT INTO calc (formula, answer) values (:formula, :answer)";
+            $statement = $pdo->prepare($sql);
+            $params = array('formula' => $formula, 'answer' => $answer);
+            $statement->execute($params);
+            echo $answer;
             
         } catch (PDOException $e){
             echo 'DB接続エラー:'. $e->getMessage();
