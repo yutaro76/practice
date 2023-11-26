@@ -1,7 +1,11 @@
 <?php 
-$dsn = "mysql:dbname=cake;host=localhost";
-$user = "okuda";
-$pass = "";
+require __DIR__ . '/vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
+$dsn = strval($_ENV['DBNAME'].$_ENV['HOST']);
+$user = $_ENV['USER'];
+$password = $_ENV['PASSWORD'];
 $pdo = new PDO($dsn, $user, $password);
 ?>
 
