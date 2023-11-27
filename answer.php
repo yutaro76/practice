@@ -24,26 +24,30 @@ $pdo = new PDO($dsn, $user, $password);
     </form> 
 
     <?php 
-        try {
-            $formula = htmlspecialchars($_POST["formula"]);
-            $result = sprintf('$answer=%s;', $formula);
-            eval($result);
-
-            $sql = "INSERT INTO calc (formula, answer) values (:formula, :answer)";
-            $statement = $pdo->prepare($sql);
-            $params = array("formula" => $formula, "answer" => $answer);
-            $statement->execute($params);
-            echo $answer;
-
-            $statement2 = $pdo->prepare("SELECT * FROM calc");
-            $statement2->execute();
-            $result = $statement2 -> fetchAll();
-            
-            $statement = null;
-            $statement2 = null;
-            $pdo = null;
-        } catch (PDOException $e){
-            echo "DB接続エラー:". $e->getMessage();
+        $formula = htmlspecialchars($_POST["formula"]);
+        if (preg_match("/[0-9]|\s|[+\-*\/]/", $formula)){
+            try {
+                $result = sprintf('$answer=%s;', $formula);
+                eval($result);
+    
+                $sql = "INSERT INTO calc (formula, answer) values (:formula, :answer)";
+                $statement = $pdo->prepare($sql);
+                $params = array("formula" => $formula, "answer" => $answer);
+                $statement->execute($params);
+                echo $answer;
+    
+                $statement2 = $pdo->prepare("SELECT * FROM calc");
+                $statement2->execute();
+                $result = $statement2 -> fetchAll();
+                
+                $statement = null;
+                $statement2 = null;
+                $pdo = null;
+            } catch (PDOException $e){
+                echo "DB接続エラー:". $e->getMessage();
+            }
+        } else {
+            echo "error";
         }
     ?>
 
