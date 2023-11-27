@@ -27,7 +27,14 @@ $pdo = new PDO($dsn, $user, $password);
         $formula = htmlspecialchars($_POST["formula"]);
         $pattern = "/[^0-9+\-\/\*\s]/";
         if (preg_match($pattern, $formula)){
-            echo "error";
+            $allowedCharacters = "0123456789+-*/ ";
+            for ($i = 0; $i < strlen($formula); $i++) {
+                $currentChar = $formula[$i];
+                if (strpos($allowedCharacters, $currentChar) === false) {
+                    echo "$i 文字目'$currentChar'が「整数、+, -, /, *」ではありません";
+                    break;
+                }
+            }
         } else {
             try {
                 $result = sprintf('$answer=%s;', $formula);
