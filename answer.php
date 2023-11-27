@@ -25,7 +25,10 @@ $pdo = new PDO($dsn, $user, $password);
 
     <?php 
         $formula = htmlspecialchars($_POST["formula"]);
-        if (preg_match("/[0-9]|\s|[+\-*\/]/", $formula)){
+        $pattern = "/[^0-9+\-\/\*\s]/";
+        if (preg_match($pattern, $formula)){
+            echo "error";
+        } else {
             try {
                 $result = sprintf('$answer=%s;', $formula);
                 eval($result);
@@ -46,8 +49,6 @@ $pdo = new PDO($dsn, $user, $password);
             } catch (PDOException $e){
                 echo "DB接続エラー:". $e->getMessage();
             }
-        } else {
-            echo "error";
         }
     ?>
 
