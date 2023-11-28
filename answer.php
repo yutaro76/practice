@@ -20,7 +20,6 @@ $pdo = new PDO($dsn, $user, $password);
     <a href="index.php">戻る</a>
     <form method="POST">
         <input type="text" name="formula"><br>
-        <input type="submit" name="btn" value="計算" disabled>
     </form> 
 
     <?php 
@@ -29,9 +28,10 @@ $pdo = new PDO($dsn, $user, $password);
         if (preg_match($pattern, $formula)){
             $allowedCharacters = "0123456789+-*/ ";
             for ($i = 0; $i < strlen($formula); $i++) {
-                $currentChar = $formula[$i];
+                $currentChar = mb_substr($formula, $i, 1, 'UTF-8');
                 if (strpos($allowedCharacters, $currentChar) === false) {
-                    echo "$i 文字目'$currentChar'が「整数、+, -, /, *」ではありません";
+                    $index = $i + 1;
+                    echo "$index 文字目'$currentChar'が「整数、+, -, /, *」ではありません";
                     break;
                 }
             }
