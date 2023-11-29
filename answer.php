@@ -25,6 +25,8 @@ $pdo = new PDO($dsn, $user, $password);
     <?php 
         $formula = htmlspecialchars($_POST["formula"]);
         $pattern = "/[^0-9+\-\/\*\s]/";
+        
+        // check if POST matches the condition
         if (preg_match($pattern, $formula)){
             $allowedCharacters = "0123456789+-*/ ";
             for ($i = 0; $i < strlen($formula); $i++) {
@@ -38,14 +40,18 @@ $pdo = new PDO($dsn, $user, $password);
         } else {
             try {
                 $result = sprintf('$answer=%s;', $formula);
+                echo deleteSpace($formula);
+                exit;
                 eval($result);
     
+                // insert data
                 $sql = "INSERT INTO calc (formula, answer) values (:formula, :answer)";
                 $statement = $pdo->prepare($sql);
                 $params = array("formula" => $formula, "answer" => $answer);
                 $statement->execute($params);
                 echo $answer;
     
+                // fetch data
                 $statement2 = $pdo->prepare("SELECT * FROM calc");
                 $statement2->execute();
                 $result = $statement2 -> fetchAll();
@@ -56,6 +62,11 @@ $pdo = new PDO($dsn, $user, $password);
             } catch (PDOException $e){
                 echo "DB接続エラー:". $e->getMessage();
             }
+        }
+        // delete space in POST
+        function deleteSpace($formula) {
+            $cleanedFormula = str_replace(' ','',$formula);
+            return $cleanedFormula;
         }
     ?>
 
