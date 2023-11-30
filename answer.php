@@ -39,10 +39,7 @@ $pdo = new PDO($dsn, $user, $password);
             }
         } else {
             try {
-                $result = sprintf('$answer=%s;', $formula);
-                echo deleteSpace($formula);
-                exit;
-                eval($result);
+                $answer = calculateFormula($formula);
     
                 // insert data
                 $sql = "INSERT INTO calc (formula, answer) values (:formula, :answer)";
@@ -63,10 +60,29 @@ $pdo = new PDO($dsn, $user, $password);
                 echo "DB接続エラー:". $e->getMessage();
             }
         }
-        // delete space in POST
-        function deleteSpace($formula) {
-            $cleanedFormula = str_replace(' ','',$formula);
-            return $cleanedFormula;
+        function calculateFormula($formula){
+            $formulaAnswer = 0;
+            $operator = "/[+\-\/\*]/";
+            
+            for($i=0; $i<strlen($formula); $i++){
+                if(preg_match($operator, $formula[$i])){
+                        switch ($formula[$i]) {
+                        case '+':
+                            $formulaAnswer = $formula[$i-1] + $formula[$i+1];
+                            break;
+                        case '-':
+                            $formulaAnswer = $formula[$i-1] - $formula[$i+1];
+                            break;
+                        case '*':
+                            $formulaAnswer = $formula[$i-1] * $formula[$i+1];
+                            break;
+                        case '/':
+                            $formulaAnswer = $formula[$i-1] / $formula[$i+1];
+                            break;
+                    }
+                }
+            }  
+            return $formulaAnswer;
         }
     ?>
 
