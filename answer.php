@@ -26,7 +26,7 @@ $pdo = new PDO($dsn, $user, $password);
         $formula = htmlspecialchars($_POST["formula"]);
         $pattern = "/[^0-9+\-\/\*\s]/";
         
-        // check if POST matches the condition
+        // check if the formula matches the condition
         if (preg_match($pattern, $formula)){
             $allowedCharacters = "0123456789+-*/ ";
             for ($i = 0; $i < strlen($formula); $i++) {
@@ -39,7 +39,8 @@ $pdo = new PDO($dsn, $user, $password);
             }
         } else {
             try {
-                $answer = calculateFormula($formula);
+                $formulaNew = deleteSpace($formula);
+                $answer = calculateFormula($formulaNew);
     
                 // insert data
                 $sql = "INSERT INTO calc (formula, answer) values (:formula, :answer)";
@@ -60,29 +61,57 @@ $pdo = new PDO($dsn, $user, $password);
                 echo "DB接続エラー:". $e->getMessage();
             }
         }
-        function calculateFormula($formula){
+
+        function calculateFormula($formulaNew){
             $formulaAnswer = 0;
             $operator = "/[+\-\/\*]/";
+            $currentNum = "";
+            $formulaArr = [];
+
+            // put each number or operator into array
+            for($i=0; $i<strlen($formulaNew); $i++){
+                if(is_numeric($formulaNew[$i])){
+                    $currentNum = $formulaNew[$i];
+                } else {
+                    if(!empty($currentNum)){
+                        $formulaArr[] = $currentNum;
+                        $currentNum = "";
+                        $formulaArr[] = $formulaNew[$i];
+                    }
+                }
+            }
             
-            for($i=0; $i<strlen($formula); $i++){
-                if(preg_match($operator, $formula[$i])){
-                        switch ($formula[$i]) {
+            // put last number of the fomula into array
+            if(!empty($currentNum)){
+                $formulaArr[] = $currentNum;
+            }
+            
+            // calculation
+            for($i=0; $i<strlen($formulaNew); $i++){
+                if(preg_match($operator, $formulaNew[$i])){
+                        switch ($formulaNew[$i]) {
                         case '+':
-                            $formulaAnswer = $formula[$i-1] + $formula[$i+1];
+                            $formulaAnswer = $formulaNew[$i-1] + $formulaNew[$i+1];
                             break;
                         case '-':
-                            $formulaAnswer = $formula[$i-1] - $formula[$i+1];
+                            $formulaAnswer = $formulaNew[$i-1] - $formulaNew[$i+1];
                             break;
                         case '*':
-                            $formulaAnswer = $formula[$i-1] * $formula[$i+1];
+                            $formulaAnswer = $formulaNew[$i-1] * $formulaNew[$i+1];
                             break;
                         case '/':
-                            $formulaAnswer = $formula[$i-1] / $formula[$i+1];
+                            $formulaAnswer = $formulaNew[$i-1] / $formulaNew[$i+1];
                             break;
                     }
                 }
             }  
             return $formulaAnswer;
+        }
+
+        // delete space in the formula
+        function deleteSpace($formula) {
+            $cleanedFormula = str_replace(' ','',$formula);
+            return $cleanedFormula;
         }
     ?>
 
@@ -100,4 +129,3 @@ $pdo = new PDO($dsn, $user, $password);
     </table>
 </body>
 </html>
-
