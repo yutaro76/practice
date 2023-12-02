@@ -68,44 +68,45 @@ $pdo = new PDO($dsn, $user, $password);
             $currentNum = "";
             $formulaArr = [];
 
-            // put each number or operator into array
-            for($i=0; $i<strlen($formulaNew); $i++){
-                if(is_numeric($formulaNew[$i])){
-                    $currentNum = $formulaNew[$i];
+            // put numbers and operands separately into array
+            $characters = str_split($formulaNew);
+            foreach($characters as $char) {
+                if (in_array($char, ["+","-","*","/"])){
+                    $formulaArr[] = $currentNum;
+                    $formulaArr[] = $char;
+                    $currentNum = "";
                 } else {
-                    if(!empty($currentNum)){
-                        $formulaArr[] = $currentNum;
-                        $currentNum = "";
-                        $formulaArr[] = $formulaNew[$i];
-                    }
+                    $currentNum .= $char;
                 }
             }
+
+            // put the last number into array
+            $formulaArr[] = $currentNum;
+
+            // calculate the array
+            // put the first number into variable
+            $answer = (int)$formulaArr[0];
+            // calculate the combination of operand and number
+            for ($i = 1; $i < count($formulaArr); $i += 2) {
+                $operator = $formulaArr[$i];
+                $number = (int)$formulaArr[$i + 1];
             
-            // put last number of the fomula into array
-            if(!empty($currentNum)){
-                $formulaArr[] = $currentNum;
-            }
-            
-            // calculation
-            for($i=0; $i<strlen($formulaNew); $i++){
-                if(preg_match($operator, $formulaNew[$i])){
-                        switch ($formulaNew[$i]) {
-                        case '+':
-                            $formulaAnswer = $formulaNew[$i-1] + $formulaNew[$i+1];
-                            break;
-                        case '-':
-                            $formulaAnswer = $formulaNew[$i-1] - $formulaNew[$i+1];
-                            break;
-                        case '*':
-                            $formulaAnswer = $formulaNew[$i-1] * $formulaNew[$i+1];
-                            break;
-                        case '/':
-                            $formulaAnswer = $formulaNew[$i-1] / $formulaNew[$i+1];
-                            break;
-                    }
+                switch ($operator) {
+                    case "+":
+                        $answer += $number;
+                        break;
+                    case "-":
+                        $answer -= $number;
+                        break;
+                    case "*":
+                        $answer *= $number;
+                        break;
+                    case "/":
+                        $answer /= $number;
+                        break;
                 }
-            }  
-            return $formulaAnswer;
+            }
+            return $answer;
         }
 
         // delete space in the formula
