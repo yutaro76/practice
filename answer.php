@@ -83,14 +83,42 @@ $pdo = new PDO($dsn, $user, $password);
             // put the last number into array
             $formulaArr[] = $currentNum;
 
+            // calculate * and / first
+            $searchValues = ["*", "/"];
+            $keys = [];
+
+            // get keys of * and /
+            foreach ($searchValues as $searchValue) {
+                $keys = array_merge($keys, array_keys($formulaArr, $searchValue));
+            }
+
+            sort($keys);
+
+            foreach ($keys as $key) {
+                if($formulaArr[$key] === "*") {
+                    $mulAnswer = $formulaArr[$key - 1] * $formulaArr[$key + 1];
+                    unset($formulaArr[$key - 1]);
+                    unset($formulaArr[$key + 1]);
+                    $formulaArr[$key] = (string)$mulAnswer;
+                } else {
+                    $mulAnswer = $formulaArr[$key - 1] / $formulaArr[$key + 1];
+                    unset($formulaArr[$key - 1]);
+                    unset($formulaArr[$key + 1]);
+                    $formulaArr[$key] = (string)$mulAnswer;
+                }
+            }
+
+            $formulaArr = array_values($formulaArr);
+
             // calculate the array
             // put the first number into variable
             $answer = (int)$formulaArr[0];
+
             // calculate the combination of operand and number
             for ($i = 1; $i < count($formulaArr); $i += 2) {
                 $operator = $formulaArr[$i];
                 $number = (int)$formulaArr[$i + 1];
-            
+       
                 switch ($operator) {
                     case "+":
                         $answer += $number;
@@ -106,6 +134,7 @@ $pdo = new PDO($dsn, $user, $password);
                         break;
                 }
             }
+       
             return $answer;
         }
 
