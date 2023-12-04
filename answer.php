@@ -41,7 +41,6 @@ $pdo = new PDO($dsn, $user, $password);
             try {
                 $formulaNew = deleteSpace($formula);
                 $answer = calculateFormula($formulaNew);
-    
                 // insert data
                 $sql = "INSERT INTO calc (formula, answer) values (:formula, :answer)";
                 $statement = $pdo->prepare($sql);
@@ -84,31 +83,32 @@ $pdo = new PDO($dsn, $user, $password);
             $formulaArr[] = $currentNum;
 
             // calculate * and / first
-            $searchValues = ["*", "/"];
-            $keys = [];
-
-            // get keys of * and /
-            foreach ($searchValues as $searchValue) {
-                $keys = array_merge($keys, array_keys($formulaArr, $searchValue));
-            }
-
+            $array1 = array_keys($formulaArr, '/');
+            $array2 = array_keys($formulaArr, '*');
+            $keys = array_merge($array1, $array2);
             sort($keys);
 
-            foreach ($keys as $key) {
-                if($formulaArr[$key] === "*") {
-                    $mulAnswer = $formulaArr[$key - 1] * $formulaArr[$key + 1];
-                    unset($formulaArr[$key - 1]);
-                    unset($formulaArr[$key + 1]);
-                    $formulaArr[$key] = (string)$mulAnswer;
+            $counter = 0;
+            while($counter <= count($keys)+1){
+                if($formulaArr[$keys[0]] === "*") {
+                    $mulAnswer = $formulaArr[$keys[0]-1] * $formulaArr[$keys[0]+1];
+                    unset($formulaArr[$keys[0]-1]);
+                    unset($formulaArr[$keys[0]+1]);
+                    $formulaArr[$keys[0]] = (string)$mulAnswer;
+                    $formulaArr = array_values($formulaArr);
                 } else {
-                    $mulAnswer = $formulaArr[$key - 1] / $formulaArr[$key + 1];
-                    unset($formulaArr[$key - 1]);
-                    unset($formulaArr[$key + 1]);
-                    $formulaArr[$key] = (string)$mulAnswer;
+                    $divAnswer = $formulaArr[$keys[0]-1] / $formulaArr[$keys[0]+1];
+                    unset($formulaArr[$keys[0]-1]);
+                    unset($formulaArr[$keys[0]+1]);
+                    $formulaArr[$keys[0]] = (string)$divAnswer;
+                    $formulaArr = array_values($formulaArr);
                 }
+                $array1 = array_keys($formulaArr, '/');
+                $array2 = array_keys($formulaArr, '*');
+                $keys = array_merge($array1, $array2);
+                sort($keys);
+                $counter ++;
             }
-
-            $formulaArr = array_values($formulaArr);
 
             // calculate the array
             // put the first number into variable
