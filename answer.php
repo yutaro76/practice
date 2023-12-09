@@ -87,6 +87,12 @@ $pdo = new PDO($dsn, $user, $password);
             $keys = array_merge($array1, $array2);
             sort($keys);
 
+            foreach($keys as $key){
+                if(($formulaArr[$key] === "/") && ($formulaArr[$key+1] === "0")){
+                    return $answer = "0で割ることはできません";
+                }
+            }
+
             if(count($keys) > 0){
                 $counter = 0;
                 while($counter <= count($keys)){
@@ -126,12 +132,6 @@ $pdo = new PDO($dsn, $user, $password);
                         break;
                     case "-":
                         $answer -= $number;
-                        break;
-                    case "*":
-                        $answer *= $number;
-                        break;
-                    case "/":
-                        $answer /= $number;
                         break;
                 }
             }
