@@ -25,10 +25,10 @@
     <?php if ($_SERVER["REQUEST_METHOD"] != "POST") { ?>
     <?php } else {
         $formula = htmlspecialchars($_POST["formula"]);
-        $pattern = "/[^0-9+\-\/\*\s]/";
+        $pattern = "/[^0-9+\-\/\*\.\s]/";
         // check if the formula matches the condition
         if (preg_match($pattern, $formula)) {
-            $allowedCharacters = "0123456789+-*/ ";
+            $allowedCharacters = "0123456789+-*/. ";
             for ($i = 0; $i < strlen($formula); $i++) {
                 $currentChar = mb_substr($formula, $i, 1, 'UTF-8');
                 if (strpos($allowedCharacters, $currentChar) === false) {
@@ -87,6 +87,7 @@
                             $formulaArr = array_values($formulaArr);
                         } else {
                             $divAnswer = $formulaArr[$keys[0] - 1] / $formulaArr[$keys[0] + 1];
+                            $divAnswer = round($divAnswer, 1);
                             unset($formulaArr[$keys[0] - 1]);
                             unset($formulaArr[$keys[0] + 1]);
                             $formulaArr[$keys[0]] = (string)$divAnswer;
@@ -102,12 +103,20 @@
 
                 // calculate the array
                 // put the first number into variable
-                $answer = (int)$formulaArr[0];
+                if (strpos($formulaArr[0], '.')) {
+                    $answer = (float)($formulaArr[0]);
+                } else {
+                    $answer = (int)($formulaArr[0]);
+                }
 
                 // calculate the combination of operand and number
                 for ($i = 1; $i < count($formulaArr); $i += 2) {
                     $operator = $formulaArr[$i];
-                    $number = (int)$formulaArr[$i + 1];
+                    if (strpos($formulaArr[$i + 1], '.')) {
+                        $number = (float)($formulaArr[$i + 1]);
+                    } else {
+                        $number = (int)($formulaArr[$i + 1]);
+                    }
 
                     switch ($operator) {
                         case "+":
