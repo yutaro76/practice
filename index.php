@@ -25,10 +25,10 @@
     <?php if ($_SERVER["REQUEST_METHOD"] != "POST") { ?>
     <?php } else {
         $formula = htmlspecialchars($_POST["formula"]);
-        $pattern = "/[^0-9+\-\/\*\.\s]/";
+        $pattern = "/[^0-9+\-\/\*\.\(\)\s]/";
         // check if the formula matches the condition
         if (preg_match($pattern, $formula)) {
-            $allowedCharacters = "0123456789+-*/. ";
+            $allowedCharacters = "0123456789+-*/.() ";
             for ($i = 0; $i < strlen($formula); $i++) {
                 $currentChar = mb_substr($formula, $i, 1, 'UTF-8');
                 if (strpos($allowedCharacters, $currentChar) === false) {
@@ -39,17 +39,24 @@
             }
         } else {
             $formulaNew = str_replace(' ', '', $formula);
-
             $formulaAnswer = 0;
             $operator = "/[+\-\/\*]/";
             $currentNum = "";
             $formulaArr = [];
 
-            // put numbers and operands separately into array
+            // put numbers and operands separately into array 
             $characters = str_split($formulaNew);
             foreach ($characters as $char) {
-                if (in_array($char, ["+", "-", "*", "/"])) {
+                if (in_array($char, ["(", ")"]) && ($currentNum)) {
                     $formulaArr[] = $currentNum;
+                    $formulaArr[] = $char;
+                    $currentNum = "";
+                } elseif (in_array($char, ["(", ")"])) {
+                    $formulaArr[] = $char;
+                } elseif (in_array($char, ["+", "-", "*", "/"])) {
+                    if ($currentNum) {
+                        $formulaArr[] = $currentNum;
+                    }
                     $formulaArr[] = $char;
                     $currentNum = "";
                 } else {
@@ -57,8 +64,9 @@
                 }
             }
 
-            // put the last number into array
-            $formulaArr[] = $currentNum;
+            if ($currentNum) {
+                $formulaArr[] = $currentNum;
+            }
 
             // calculate * and / first
             $array1 = array_keys($formulaArr, '/');
