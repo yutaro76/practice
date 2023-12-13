@@ -64,78 +64,92 @@
                 }
             }
 
+            // put the last number into array
             if ($currentNum) {
                 $formulaArr[] = $currentNum;
             }
 
+            // extract formula inside ()
+            if (in_array('(', $formulaArr) && in_array(')', $formulaArr)) {
+                $openPar = array_search('(', $formulaArr);
+                $closePar = array_search(')', $formulaArr);
+            }
+            $formulaInPar = [];
+            for ($i = $openPar + 1; $i < $closePar; $i++) {
+                $formulaInPar[] = $formulaArr[$i];
+            }
+
             // calculate * and / first
-            $array1 = array_keys($formulaArr, '/');
-            $array2 = array_keys($formulaArr, '*');
-            $keys = array_merge($array1, $array2);
-            sort($keys);
+            if (in_array('*', $formulaArr) || in_array('/', $formulaArr)) {
+                $array1 = array_keys($formulaArr, '/');
+                $array2 = array_keys($formulaArr, '*');
+                $keys = array_merge($array1, $array2);
+                sort($keys);
 
-            // check if divided by 0
-            foreach ($keys as $key) {
-                if (($formulaArr[$key] === "/") && ($formulaArr[$key + 1] === "0")) {
-                    $answerErr = "0で割ることはできません";
+                // check if divided by 0
+                foreach ($keys as $key) {
+                    if (($formulaArr[$key] === "/") && ($formulaArr[$key + 1] === "0")) {
+                        $answerErr = "0で割ることはできません";
+                    }
                 }
-            }
 
-            // if not divided by 0 
-            if (!($answerErr)) {
-                // calculate * and / parts first
-                if (count($keys) > 0) {
-                    $counter = 0;
-                    while ($counter <= count($keys)) {
-                        if ($formulaArr[$keys[0]] === "*") {
-                            $mulAnswer = $formulaArr[$keys[0] - 1] * $formulaArr[$keys[0] + 1];
-                            unset($formulaArr[$keys[0] - 1]);
-                            unset($formulaArr[$keys[0] + 1]);
-                            $formulaArr[$keys[0]] = (string)$mulAnswer;
-                            $formulaArr = array_values($formulaArr);
-                        } else {
-                            $divAnswer = $formulaArr[$keys[0] - 1] / $formulaArr[$keys[0] + 1];
-                            $divAnswer = round($divAnswer, 1);
-                            unset($formulaArr[$keys[0] - 1]);
-                            unset($formulaArr[$keys[0] + 1]);
-                            $formulaArr[$keys[0]] = (string)$divAnswer;
-                            $formulaArr = array_values($formulaArr);
+                // if not divided by 0 
+                if (!($answerErr)) {
+                    // calculate * and / parts first
+                    if (count($keys) > 0) {
+                        $counter = 0;
+                        while ($counter <= count($keys)) {
+                            if ($formulaArr[$keys[0]] === "*") {
+                                $mulAnswer = $formulaArr[$keys[0] - 1] * $formulaArr[$keys[0] + 1];
+                                unset($formulaArr[$keys[0] - 1]);
+                                unset($formulaArr[$keys[0] + 1]);
+                                $formulaArr[$keys[0]] = (string)$mulAnswer;
+                                $formulaArr = array_values($formulaArr);
+                            } else {
+                                $divAnswer = $formulaArr[$keys[0] - 1] / $formulaArr[$keys[0] + 1];
+                                $divAnswer = round($divAnswer, 1);
+                                unset($formulaArr[$keys[0] - 1]);
+                                unset($formulaArr[$keys[0] + 1]);
+                                $formulaArr[$keys[0]] = (string)$divAnswer;
+                                $formulaArr = array_values($formulaArr);
+                            }
+                            $array1 = array_keys($formulaArr, '/');
+                            $array2 = array_keys($formulaArr, '*');
+                            $keys = array_merge($array1, $array2);
+                            sort($keys);
+                            $counter++;
                         }
-                        $array1 = array_keys($formulaArr, '/');
-                        $array2 = array_keys($formulaArr, '*');
-                        $keys = array_merge($array1, $array2);
-                        sort($keys);
-                        $counter++;
-                    }
-                }
-
-                // calculate the array
-                // put the first number into variable
-                if (strpos($formulaArr[0], '.')) {
-                    $answer = (float)($formulaArr[0]);
-                } else {
-                    $answer = (int)($formulaArr[0]);
-                }
-
-                // calculate the combination of operand and number
-                for ($i = 1; $i < count($formulaArr); $i += 2) {
-                    $operator = $formulaArr[$i];
-                    if (strpos($formulaArr[$i + 1], '.')) {
-                        $number = (float)($formulaArr[$i + 1]);
-                    } else {
-                        $number = (int)($formulaArr[$i + 1]);
-                    }
-
-                    switch ($operator) {
-                        case "+":
-                            $answer += $number;
-                            break;
-                        case "-":
-                            $answer -= $number;
-                            break;
                     }
                 }
             }
+
+            // calculate the array
+            // put the first number into variable
+            if (strpos($formulaArr[0], '.')) {
+                $answer = (float)($formulaArr[0]);
+            } else {
+                $answer = (int)($formulaArr[0]);
+            }
+
+            // calculate the combination of operand and number
+            for ($i = 1; $i < count($formulaArr); $i += 2) {
+                $operator = $formulaArr[$i];
+                if (strpos($formulaArr[$i + 1], '.')) {
+                    $number = (float)($formulaArr[$i + 1]);
+                } else {
+                    $number = (int)($formulaArr[$i + 1]);
+                }
+
+                switch ($operator) {
+                    case "+":
+                        $answer += $number;
+                        break;
+                    case "-":
+                        $answer -= $number;
+                        break;
+                }
+            }
+
             // replace $answer if divided by 0 
             if ($answerErr) {
                 $answer = $answerErr;
