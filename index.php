@@ -47,8 +47,9 @@
 
             // put numbers and operands separately into array 
             $characters = str_split($formulaNew);
+
             foreach ($characters as $char) {
-                if (in_array($char, ["(", ")"]) && ($currentNum)) {
+                if (in_array($char, ["(", ")"]) && (!($currentNum == null))) {
                     $formulaArr[] = $currentNum;
                     $formulaArr[] = $char;
                     $currentNum = "";
@@ -66,8 +67,8 @@
             }
 
             // put the last number into array
-            if ($currentNum) {
-                $formulaArr[] = $currentNum;
+            if (!($currentNum == null)) {
+                array_push($formulaArr, $currentNum);
             }
 
             // extract formula inside () 
@@ -81,31 +82,47 @@
 
                 // calculate inside ()
                 if ((in_array('*', $formulaInPar)) || (in_array('/', $formulaInPar))) {
-                    $formulaInParAns = multipleAndDivide($formulaInPar);
-                    if ((in_array('+', $formulaInParAns)) || (in_array('-', $formulaInParAns))) {
-                        $formulaInParAns = plusAndMinus($formulaInParAns);
+                    if (!(multipleAndDivide($formulaInPar)[1] == null)) {
+                        $formulaInParAns = multipleAndDivide($formulaInPar)[0];
+                        $answerErr = multipleAndDivide($formulaInPar)[1];
+                        $formulaArr = '';
                     } else {
-                        $formulaInParAns = $formulaInParAns[0];
+                        $formulaInParAns = multipleAndDivide($formulaInPar)[0];
+                        if ((in_array('+', $formulaInParAns)) || (in_array('-', $formulaInParAns))) {
+                            $formulaInParAns = plusAndMinus($formulaInParAns);
+                        }
                     }
                 } else {
                     $formulaInParAns = plusAndMinus($formulaInPar);
                 }
 
                 // replace ( ) and inside formula with the answer 
-                for ($i = $openPar + 1; $i <= $closePar; $i++) {
-                    unset($formulaArr[$i]);
+                if (!($formulaArr == null)) {
+                    for ($i = $openPar + 1; $i <= $closePar; $i++) {
+                        unset($formulaArr[$i]);
+                    }
+                    $formulaArr[array_search('(', $formulaArr)] = (string)$formulaInParAns;
+                    $formulaArr = array_merge($formulaArr);
                 }
-                $formulaArr[array_search('(', $formulaArr)] = (string)$formulaInParAns;
-                $formulaArr = array_merge($formulaArr);
+            } elseif (in_array('(', $formulaArr) || in_array(')', $formulaArr)) {
+                $answerErr = "()の入力が不十分です";
             }
 
-            // get answer of the whole formula
-            if ((in_array('*', $formulaArr)) || (in_array('/', $formulaArr))) {
-                $answer = multipleAndDivide($formulaArr);
-                if ((in_array('+', $answer)) || (in_array('-', $answer)))
-                    $answer = plusAndMinus($answer);
-            } else {
-                $answer = plusAndMinus($formulaArr);
+            // get answer of the whole formula 
+            if (!($formulaArr == null) && ($answerErr == null)) {
+                if ((in_array('*', $formulaArr)) || (in_array('/', $formulaArr))) {
+                    if (!(multipleAndDivide($formulaArr)[1]) == null) {
+                        $answerErr = multipleAndDivide($formulaArr)[1];
+                        $answer = '';
+                    } else {
+                        $answer = multipleAndDivide($formulaArr)[0];
+                        if ((in_array('+', $answer)) || (in_array('-', $answer))) {
+                            $answer = plusAndMinus($answer);
+                        }
+                    }
+                } elseif (!($formulaArr == null)) {
+                    $answer = plusAndMinus($formulaArr);
+                }
             }
 
             // replace $answer if divided by 0 

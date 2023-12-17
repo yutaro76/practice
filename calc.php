@@ -2,74 +2,46 @@
 
 function multipleAndDivide($formulaArr)
 {
-    // calculate * and / first
+    // calculate * and / first 
     if (in_array('*', $formulaArr) || in_array('/', $formulaArr)) {
         $array1 = array_keys($formulaArr, '/');
         $array2 = array_keys($formulaArr, '*');
         $keys = array_merge($array1, $array2);
         sort($keys);
 
-        // check if divided by 0
-        foreach ($keys as $key) {
-            if (($formulaArr[$key] === "/") && ($formulaArr[$key + 1] === "0")) {
-                $answerErr = "0で割ることはできません";
-            }
-        }
+        $answerErr = '';
+        $counter = 0;
+        $repKeys = count($keys);
 
-        // if not divided by 0 
-        if (!($answerErr)) {
-            // calculate * and / parts first
-            if (count($keys) > 0) {
-                $counter = 0;
-                if ($keys >= 2) {
-                    while ($counter <= count($keys)) {
-                        if ($formulaArr[$keys[0]] === "*") {
-                            $mulAnswer = $formulaArr[$keys[0] - 1] * $formulaArr[$keys[0] + 1];
-                            unset($formulaArr[$keys[0] - 1]);
-                            unset($formulaArr[$keys[0] + 1]);
-                            $formulaArr[$keys[0]] = (string)$mulAnswer;
-                            $formulaArr = array_values($formulaArr);
-                        } else {
-                            $divAnswer = $formulaArr[$keys[0] - 1] / $formulaArr[$keys[0] + 1];
-                            $divAnswer = round($divAnswer, 1);
-                            unset($formulaArr[$keys[0] - 1]);
-                            unset($formulaArr[$keys[0] + 1]);
-                            $formulaArr[$keys[0]] = (string)$divAnswer;
-                            $formulaArr = array_values($formulaArr);
-                        }
-                        $array1 = array_keys($formulaArr, '/');
-                        $array2 = array_keys($formulaArr, '*');
-                        $keys = array_merge($array1, $array2);
-                        sort($keys);
-                        $counter++;
-                    }
+        for ($counter = 0; $counter < $repKeys; $counter++) {
+            if ($formulaArr[$keys[0]] === "*") {
+                $mulAnswer = $formulaArr[$keys[0] - 1] * $formulaArr[$keys[0] + 1];
+                unset($formulaArr[$keys[0] - 1]);
+                unset($formulaArr[$keys[0] + 1]);
+                $formulaArr[$keys[0]] = (string)$mulAnswer;
+                $formulaArr = array_values($formulaArr);
+            } else {
+                if ($formulaArr[$keys[0] + 1] == '0') {
+                    $formulaArr = '';
+                    $answerErr = "0で割ることはできません";
+                    break;
                 }
-                while ($counter <= count($keys)) {
-                    if ($formulaArr[$keys[0]] === "*") {
-                        $mulAnswer = $formulaArr[$keys[0] - 1] * $formulaArr[$keys[0] + 1];
-                        unset($formulaArr[$keys[0] - 1]);
-                        unset($formulaArr[$keys[0] + 1]);
-                        $formulaArr[$keys[0]] = (string)$mulAnswer;
-                        $formulaArr = array_values($formulaArr);
-                    } else {
-                        $divAnswer = $formulaArr[$keys[0] - 1] / $formulaArr[$keys[0] + 1];
-                        $divAnswer = round($divAnswer, 1);
-                        unset($formulaArr[$keys[0] - 1]);
-                        unset($formulaArr[$keys[0] + 1]);
-                        $formulaArr[$keys[0]] = (string)$divAnswer;
-                        $formulaArr = array_values($formulaArr);
-                    }
-                    $array1 = array_keys($formulaArr, '/');
-                    $array2 = array_keys($formulaArr, '*');
-                    $keys = array_merge($array1, $array2);
-                    sort($keys);
-                    $counter++;
-                }
+                $divAnswer = $formulaArr[$keys[0] - 1] / $formulaArr[$keys[0] + 1];
+                $divAnswer = round($divAnswer, 1);
+                unset($formulaArr[$keys[0] - 1]);
+                unset($formulaArr[$keys[0] + 1]);
+                $formulaArr[$keys[0]] = (string)$divAnswer;
+                $formulaArr = array_values($formulaArr);
+            }
+            if (in_array('*', $formulaArr) || in_array('/', $formulaArr)) {
+                $array1 = array_keys($formulaArr, '/');
+                $array2 = array_keys($formulaArr, '*');
+                $keys = array_merge($array1, $array2);
+                sort($keys);
             }
         }
     }
-
-    return $formulaArr;
+    return array($formulaArr, $answerErr);
 }
 
 function plusAndMinus($formulaArr)
