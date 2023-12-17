@@ -81,7 +81,12 @@
 
                 // calculate inside ()
                 if ((in_array('*', $formulaInPar)) || (in_array('/', $formulaInPar))) {
-                    $formulaInParAns = multipleAndDivide($formulaInPar)[0];
+                    $formulaInParAns = multipleAndDivide($formulaInPar);
+                    if ((in_array('+', $formulaInParAns)) || (in_array('-', $formulaInParAns))) {
+                        $formulaInParAns = plusAndMinus($formulaInParAns);
+                    } else {
+                        $formulaInParAns = $formulaInParAns[0];
+                    }
                 } else {
                     $formulaInParAns = plusAndMinus($formulaInPar);
                 }
@@ -94,7 +99,7 @@
                 $formulaArr = array_merge($formulaArr);
             }
 
-            // get the answer of the whole formula
+            // get answer of the whole formula
             if ((in_array('*', $formulaArr)) || (in_array('/', $formulaArr))) {
                 $answer = multipleAndDivide($formulaArr);
                 if ((in_array('+', $answer)) || (in_array('-', $answer)))

@@ -21,30 +21,8 @@ function multipleAndDivide($formulaArr)
             // calculate * and / parts first
             if (count($keys) > 0) {
                 $counter = 0;
-                if ($keys > 2) {
+                if ($keys >= 2) {
                     while ($counter <= count($keys)) {
-                        if ($formulaArr[$keys[0]] === "*") {
-                            $mulAnswer = $formulaArr[$keys[0] - 1] * $formulaArr[$keys[0] + 1];
-                            unset($formulaArr[$keys[0] - 1]);
-                            unset($formulaArr[$keys[0] + 1]);
-                            $formulaArr[$keys[0]] = (string)$mulAnswer;
-                            $formulaArr = array_values($formulaArr);
-                        } else {
-                            $divAnswer = $formulaArr[$keys[0] - 1] / $formulaArr[$keys[0] + 1];
-                            $divAnswer = round($divAnswer, 1);
-                            unset($formulaArr[$keys[0] - 1]);
-                            unset($formulaArr[$keys[0] + 1]);
-                            $formulaArr[$keys[0]] = (string)$divAnswer;
-                            $formulaArr = array_values($formulaArr);
-                        }
-                        $array1 = array_keys($formulaArr, '/');
-                        $array2 = array_keys($formulaArr, '*');
-                        $keys = array_merge($array1, $array2);
-                        sort($keys);
-                        $counter++;
-                    }
-                } else {
-                    while ($counter <= count($keys) + 1) {
                         if ($formulaArr[$keys[0]] === "*") {
                             $mulAnswer = $formulaArr[$keys[0] - 1] * $formulaArr[$keys[0] + 1];
                             unset($formulaArr[$keys[0] - 1]);
