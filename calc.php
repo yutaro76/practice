@@ -2,7 +2,7 @@
 
 function multipleAndDivide($formulaArr)
 {
-    // calculate * and / first 
+    // calculate * and / first
     if (in_array('*', $formulaArr) || in_array('/', $formulaArr)) {
         $array1 = array_keys($formulaArr, '/');
         $array2 = array_keys($formulaArr, '*');
