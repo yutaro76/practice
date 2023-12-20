@@ -98,6 +98,10 @@
                         $formulaInParAns = plusAndMinus($formulaInPar);
                     }
 
+                    if (is_array($formulaInParAns)) {
+                        $formulaInParAns = $formulaInParAns[0];
+                    }
+
                     // replace ( ) and inside formula with the answer 
                     if (!($formulaArr == null)) {
                         for ($i = $openPar + 1; $i <= $closePar; $i++) {
@@ -123,7 +127,7 @@
                         $openKeysLast = end($openKeys);
                         $closeKeysFirst = array_values($closeKeys)[0];
 
-                        // calculate from inner (): get ( from the last and get ) from the last
+                        // calculate from inner (): get ( from the last and get ) from the first
                         $formulaInPar = [];
                         for ($i = $openKeysLast + 1; $i < $closeKeysFirst; $i++) {
                             $formulaInPar[] = $formulaArr[$i];
@@ -142,6 +146,10 @@
                             }
                         } else {
                             $formulaInParAns = plusAndMinus($formulaInPar);
+                        }
+
+                        if (is_array($formulaInParAns)) {
+                            $formulaInParAns = $formulaInParAns[0];
                         }
 
                         // replace original formula with the answer
