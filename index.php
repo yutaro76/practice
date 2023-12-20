@@ -127,42 +127,83 @@
                         $openKeysLast = end($openKeys);
                         $closeKeysFirst = array_values($closeKeys)[0];
 
-                        // calculate from inner (): get ( from the last and get ) from the first
-                        $formulaInPar = [];
-                        for ($i = $openKeysLast + 1; $i < $closeKeysFirst; $i++) {
-                            $formulaInPar[] = $formulaArr[$i];
-                        }
+                        if ($openKeysLast > $closeKeysFirst) {
+                            // if the key of last '(' is bigger than first ')' ex (2 * 4) + (2 + 3)
+                            // put numbers and operator inside () into []
+                            $formulaInPar = [];
+                            for ($i = $openKeys[$s] + 1; $i < $closeKeys[$s]; $i++) {
+                                $formulaInPar[] = $formulaArr[$i];
+                            }
 
-                        if ((in_array('*', $formulaInPar)) || (in_array('/', $formulaInPar))) {
-                            if (!(multipleAndDivide($formulaInPar)[1] == null)) {
-                                $formulaInParAns = multipleAndDivide($formulaInPar)[0];
-                                $answerErr = multipleAndDivide($formulaInPar)[1];
-                                $formulaArr = '';
-                            } else {
-                                $formulaInParAns = multipleAndDivide($formulaInPar)[0];
-                                if ((in_array('+', $formulaInParAns)) || (in_array('-', $formulaInParAns))) {
-                                    $formulaInParAns = plusAndMinus($formulaInParAns);
+                            // calculate inside ()
+                            if ((in_array('*', $formulaInPar)) || (in_array('/', $formulaInPar))) {
+                                if (!(multipleAndDivide($formulaInPar)[1] == null)) {
+                                    $formulaInParAns = multipleAndDivide($formulaInPar)[0];
+                                    $answerErr = multipleAndDivide($formulaInPar)[1];
+                                    $formulaArr = '';
+                                } else {
+                                    $formulaInParAns = multipleAndDivide($formulaInPar)[0];
+                                    if ((in_array('+', $formulaInParAns)) || (in_array('-', $formulaInParAns))) {
+                                        $formulaInParAns = plusAndMinus($formulaInParAns);
+                                    }
                                 }
+                            } else {
+                                $formulaInParAns = plusAndMinus($formulaInPar);
                             }
+
+                            // if the answer is array, extract the value
+                            if (is_array($formulaInParAns)) {
+                                $formulaInParAns = $formulaInParAns[0];
+                            }
+
+                            // replace the original formula with the answer
+                            if (!($formulaArr == null)) {
+                                for ($i = $openKeys[$s] + 1; $i <= $closeKeys[$s]; $i++) {
+                                    unset($formulaArr[$i]);
+                                }
+                                $formulaArr = array_merge($formulaArr);
+                                // $openKeysLast = end($openKeys);
+                                $formulaArr[$openKeys[$s]] = (string)$formulaInParAns;
+                                $formulaArr = array_merge($formulaArr);
+                            }
+                            $s++;
                         } else {
-                            $formulaInParAns = plusAndMinus($formulaInPar);
-                        }
-
-                        if (is_array($formulaInParAns)) {
-                            $formulaInParAns = $formulaInParAns[0];
-                        }
-
-                        // replace original formula with the answer
-                        if (!($formulaArr == null)) {
-                            for ($i = $openKeysLast + 1; $i <= $closeKeysFirst; $i++) {
-                                unset($formulaArr[$i]);
+                            // if the key of last '(' is smaller than first ')' ex ((2 * 4) + 5) * 2
+                            $formulaInPar = [];
+                            for ($i = $openKeysLast + 1; $i < $closeKeysFirst; $i++) {
+                                $formulaInPar[] = $formulaArr[$i];
                             }
-                            $formulaArr = array_merge($formulaArr);
-                            $openKeysLast = end($openKeys);
-                            $formulaArr[$openKeysLast] = (string)$formulaInParAns;
-                            $formulaArr = array_merge($formulaArr);
+
+                            if ((in_array('*', $formulaInPar)) || (in_array('/', $formulaInPar))) {
+                                if (!(multipleAndDivide($formulaInPar)[1] == null)) {
+                                    $formulaInParAns = multipleAndDivide($formulaInPar)[0];
+                                    $answerErr = multipleAndDivide($formulaInPar)[1];
+                                    $formulaArr = '';
+                                } else {
+                                    $formulaInParAns = multipleAndDivide($formulaInPar)[0];
+                                    if ((in_array('+', $formulaInParAns)) || (in_array('-', $formulaInParAns))) {
+                                        $formulaInParAns = plusAndMinus($formulaInParAns);
+                                    }
+                                }
+                            } else {
+                                $formulaInParAns = plusAndMinus($formulaInPar);
+                            }
+
+                            if (is_array($formulaInParAns)) {
+                                $formulaInParAns = $formulaInParAns[0];
+                            }
+
+                            if (!($formulaArr == null)) {
+                                for ($i = $openKeysLast + 1; $i <= $closeKeysFirst; $i++) {
+                                    unset($formulaArr[$i]);
+                                }
+                                $formulaArr = array_merge($formulaArr);
+                                $openKeysLast = end($openKeys);
+                                $formulaArr[$openKeysLast] = (string)$formulaInParAns;
+                                $formulaArr = array_merge($formulaArr);
+                            }
+                            $s++;
                         }
-                        $s++;
                     }
                 }
             } elseif (in_array('(', $formulaArr) || in_array(')', $formulaArr)) {
@@ -195,6 +236,10 @@
             if (is_array($answer)) {
                 $answer = $answer[0];
             }
+
+            echo '<pre>';
+            var_dump($answer);
+            exit;
 
             // insert data
             try {
