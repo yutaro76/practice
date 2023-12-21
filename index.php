@@ -71,7 +71,7 @@
                 array_push($formulaArr, $currentNum);
             }
 
-            // extract formula inside () 
+            // if there is/are () 
             if (in_array('(', $formulaArr) && in_array(')', $formulaArr)) {
                 // if there is one ()
                 if (array_count_values($formulaArr)['('] == 1 && array_count_values($formulaArr)[')'] == 1) {
@@ -81,7 +81,6 @@
                     for ($i = $openPar + 1; $i < $closePar; $i++) {
                         $formulaInPar[] = $formulaArr[$i];
                     }
-
                     // calculate inside ()
                     if ((in_array('*', $formulaInPar)) || (in_array('/', $formulaInPar))) {
                         if (!(multipleAndDivide($formulaInPar)[1] == null)) {
@@ -97,11 +96,10 @@
                     } else {
                         $formulaInParAns = plusAndMinus($formulaInPar);
                     }
-
+                    // if the answer is array, extract the answer
                     if (is_array($formulaInParAns)) {
                         $formulaInParAns = $formulaInParAns[0];
                     }
-
                     // replace ( ) and inside formula with the answer 
                     if (!($formulaArr == null)) {
                         for ($i = $openPar + 1; $i <= $closePar; $i++) {
@@ -110,70 +108,219 @@
                         $formulaArr[array_search('(', $formulaArr)] = (string)$formulaInParAns;
                         $formulaArr = array_merge($formulaArr);
                     }
-                } else {
-                    // if there are multiple ()
-                    // count the number of ()
-                    $elementCounts = array_count_values($formulaArr);
-                    $openParNum = $elementCounts['('];
+                } else { // if there are multiple ()
+                    $openPar = '(';
+                    $closePar = ')';
+                    $openKeys = array_keys($formulaArr, $openPar);
+                    $closeKeys = array_keys($formulaArr, $closePar);
+                    $openKeysLast = end($openKeys);
+                    $closeKeysFirst = array_values($closeKeys)[0];
+                    $separateOperator = [];
+                    $separateOperatorCalc = [];
+                    $answerErr = '';
+                    if ($openKeysLast > $closeKeysFirst) {
+                        // if the last '(' is bigger than first ')' ex (((((1 + 2) + 3) + 4) + 5) + 6) + (10 * 2)
+                        // check the combination of " ) operator ( "
+                        for ($i = 0; $i < count($formulaArr) - 2; $i++) {
+                            if (
+                                $formulaArr[$i] == ')' && $formulaArr[$i + 1] == '+' && $formulaArr[$i + 2] == '('
+                                ||
+                                $formulaArr[$i] == ')' && $formulaArr[$i + 1] == '-' && $formulaArr[$i + 2] == '('
+                                ||
+                                $formulaArr[$i] == ')' && $formulaArr[$i + 1] == '*' && $formulaArr[$i + 2] == '('
+                                ||
+                                $formulaArr[$i] == ')' && $formulaArr[$i + 1] == '/' && $formulaArr[$i + 2] == '('
+                            ) {
+                                // put the key of separating operator into array
+                                $separateOperator[] = $i + 1;
+                                $separateOperatorCalc[] = $formulaArr[$i + 1];
 
-                    // repeat as many as ()
-                    $s = 0;
-                    while ($s < $openParNum) {
-                        // get the keys of ( and )
-                        $openPar = '(';
-                        $closePar = ')';
-                        $openKeys = array_keys($formulaArr, $openPar);
-                        $closeKeys = array_keys($formulaArr, $closePar);
-                        $openKeysLast = end($openKeys);
-                        $closeKeysFirst = array_values($closeKeys)[0];
+                                // extract formula of the first half
+                                $formulaInParFirst = [];
+                                for ($i = 1; $i < $separateOperator[0] - 1; $i++) {
+                                    $formulaInParFirst[] = $formulaArr[$i];
+                                }
+                                // extract formula of the second half
+                                $formulaInParSecond = [];
+                                for ($i = $separateOperator[0] + 2; $i < array_key_last($formulaArr); $i++) {
+                                    $formulaInParSecond[] = $formulaArr[$i];
+                                }
 
-                        if ($openKeysLast > $closeKeysFirst) {
-                            // if the key of last '(' is bigger than first ')' ex (2 * 4) + (2 + 3)
-                            // put numbers and operator inside () into []
-                            $formulaInPar = [];
-                            for ($i = $openKeys[$s] + 1; $i < $closeKeys[$s]; $i++) {
-                                $formulaInPar[] = $formulaArr[$i];
-                            }
+                                // calculate the first half
+                                $elementCounts = array_count_values($formulaInParFirst);
+                                // if there is/are ()
+                                if (isset($elementCounts['('])) {
+                                    $openParNumFirst = $elementCounts['('];
+                                    // repeat as many as ()
+                                    $s = 0;
+                                    while ($s < $openParNumFirst) {
+                                        $openPar = '(';
+                                        $closePar = ')';
+                                        $openKeys = array_keys($formulaInParFirst, $openPar);
+                                        $closeKeys = array_keys($formulaInParFirst, $closePar);
+                                        $openKeysLast = end($openKeys);
+                                        $closeKeysFirst = array_values($closeKeys)[0];
 
-                            // calculate inside ()
-                            if ((in_array('*', $formulaInPar)) || (in_array('/', $formulaInPar))) {
-                                if (!(multipleAndDivide($formulaInPar)[1] == null)) {
-                                    $formulaInParAns = multipleAndDivide($formulaInPar)[0];
-                                    $answerErr = multipleAndDivide($formulaInPar)[1];
-                                    $formulaArr = '';
-                                } else {
-                                    $formulaInParAns = multipleAndDivide($formulaInPar)[0];
-                                    if ((in_array('+', $formulaInParAns)) || (in_array('-', $formulaInParAns))) {
-                                        $formulaInParAns = plusAndMinus($formulaInParAns);
+                                        // put formula inside () into []
+                                        $formulaInParFirstInside = [];
+                                        for ($k = $openKeysLast + 1; $k < $closeKeysFirst; $k++) {
+                                            $formulaInParFirstInside[] = $formulaInParFirst[$k];
+                                        }
+
+                                        // calculate inside the formula
+                                        if ((in_array('*', $formulaInParFirstInside)) || (in_array('/', $formulaInParFirstInside))) {
+                                            if (!(multipleAndDivide($formulaInParFirstInside)[1] == null)) {
+                                                $formulaInParFirstInsideAns = multipleAndDivide($formulaInParFirstInside)[0];
+                                                $answerErr = multipleAndDivide($formulaInParFirstInside)[1];
+                                                $formulaArr = '';
+                                            } else {
+                                                $formulaInParFirstInsideAns = multipleAndDivide($formulaInParFirstInside)[0];
+                                                if ((in_array('+', $formulaInParFirstInsideAns)) || (in_array('-', $formulaInParFirstInsideAns))) {
+                                                    $formulaInParFirstInsideAns = plusAndMinus($formulaInParFirstInsideAns);
+                                                }
+                                            }
+                                        } else {
+                                            $formulaInParFirstInsideAns = plusAndMinus($formulaInParFirstInside);
+                                        }
+
+                                        // if the answer is array, extract the answer
+                                        if (is_array($formulaInParFirstInsideAns)) {
+                                            $formulaInParFirstInsideAns = $formulaInParFirstInsideAns[0];
+                                        }
+
+                                        // replace ( ) and inside formula with the answer 
+                                        if (!($formulaInParFirst == null)) {
+                                            for ($k = $openKeysLast + 1; $k <= $closeKeysFirst; $k++) {
+                                                unset($formulaInParFirst[$k]);
+                                            }
+                                            $formulaInParFirst = array_merge($formulaInParFirst);
+                                            $openKeysLast = end($openKeys);
+                                            $formulaInParFirst[$openKeysLast] = (string)$formulaInParFirstInsideAns;
+                                            $formulaInParFirst = array_merge($formulaInParFirst);
+                                        }
+                                        $s++;
                                     }
                                 }
-                            } else {
-                                $formulaInParAns = plusAndMinus($formulaInPar);
-                            }
 
-                            // if the answer is array, extract the value
-                            if (is_array($formulaInParAns)) {
-                                $formulaInParAns = $formulaInParAns[0];
-                            }
-
-                            // replace the original formula with the answer
-                            if (!($formulaArr == null)) {
-                                for ($i = $openKeys[$s] + 1; $i <= $closeKeys[$s]; $i++) {
-                                    unset($formulaArr[$i]);
+                                // calculate the formula that has no ()
+                                if (!($formulaInParFirst == null) && ($answerErr == null)) {
+                                    if ((in_array('*', $formulaInParFirst)) || (in_array('/', $formulaInParFirst))) {
+                                        if (!(multipleAndDivide($formulaInParFirst)[1]) == null) {
+                                            $answerErr = multipleAndDivide($formulaInParFirst)[1];
+                                            $answerFirst = '';
+                                        } else {
+                                            $answerFirst = multipleAndDivide($formulaInParFirst)[0];
+                                            if ((in_array('+', $answerFirst)) || (in_array('-', $answerFirst))) {
+                                                $answerFirst = plusAndMinus($answerFirst);
+                                            }
+                                        }
+                                    } elseif (!($formulaInParFirst == null)) {
+                                        $answerFirst = plusAndMinus($formulaInParFirst);
+                                    }
+                                    $answerFirst = (array)$answerFirst;
                                 }
-                                $formulaArr = array_merge($formulaArr);
-                                // $openKeysLast = end($openKeys);
-                                $formulaArr[$openKeys[$s]] = (string)$formulaInParAns;
-                                $formulaArr = array_merge($formulaArr);
+
+                                // calculate the first half
+                                $elementCounts = array_count_values($formulaInParSecond);
+                                if ($elementCounts['('] !== null) {
+                                    $openParNumSecond = $elementCounts['('];
+                                    // repeat as many as ()
+                                    $m = 0;
+                                    while ($m < $openParNumSecond) {
+                                        $openPar = '(';
+                                        $closePar = ')';
+                                        $openKeys = array_keys($formulaInParSecond, $openPar);
+                                        $closeKeys = array_keys($formulaInParSecond, $closePar);
+                                        $openKeysLast = end($openKeys);
+                                        $closeKeysFirst = array_values($closeKeys)[0];
+                                        $answerErr = '';
+
+                                        // put formula inside () into []
+                                        $formulaInParSecondInside = [];
+                                        for ($j = $openKeysLast + 1; $j < $closeKeysFirst; $j++) {
+                                            $formulaInParSecondInside[] = $formulaInParSecond[$j];
+                                        }
+
+                                        // calculate inside the formula
+                                        if ((in_array('*', $formulaInParSecondInside)) || (in_array('/', $formulaInParSecondInside))) {
+                                            if (!(multipleAndDivide($formulaInParSecondInside)[1] == null)) {
+                                                $formulaInParSecondInsideAns = multipleAndDivide($formulaInParSecondInside)[0];
+                                                $answerErr = multipleAndDivide($formulaInParSecondInside)[1];
+                                                $formulaArr = '';
+                                            } else {
+                                                $formulaInParSecondInsideAns = multipleAndDivide($formulaInParSecondInside)[0];
+                                                if ((in_array('+', $formulaInParSecondInsideAns)) || (in_array('-', $formulaInParSecondInsideAns))) {
+                                                    $formulaInParSecondInsideAns = plusAndMinus($formulaInParSecondInsideAns);
+                                                }
+                                            }
+                                        } else {
+                                            $formulaInParSecondInsideAns = plusAndMinus($formulaInParSecondInside);
+                                        }
+
+                                        // if the answer is array, extract the answer
+                                        if (is_array($formulaInParSecondInsideAns)) {
+                                            $formulaInParSecondInsideAns = $formulaInParSecondInsideAns[0];
+                                        }
+
+                                        // replace ( ) and inside formula with the answer 
+                                        if (!($formulaInParSecond == null)) {
+                                            for ($j = $openKeysLast + 1; $j <= $closeKeysFirst; $j++) {
+                                                unset($formulaInParSecond[$j]);
+                                            }
+                                            $formulaInParSecond = array_merge($formulaInParSecond);
+                                            $openKeysLast = end($openKeys);
+                                            $formulaInParSecond[$openKeysLast] = (string)$formulaInParSecondInsideAns;
+                                            $formulaInParSecond = array_merge($formulaInParSecond);
+                                        }
+                                        $m++;
+                                    }
+                                }
+
+                                // calculate the formula that has no ()
+                                if (!($formulaInParSecond == null) && ($answerErr == null)) {
+                                    if ((in_array('*', $formulaInParSecond)) || (in_array('/', $formulaInParSecond))) {
+                                        if (!(multipleAndDivide($formulaInParSecond)[1]) == null) {
+                                            $answerErr = multipleAndDivide($formulaInParSecond)[1];
+                                            $answerSecond = '';
+                                        } else {
+                                            $answerSecond = multipleAndDivide($formulaInParSecond)[0];
+                                            if ((in_array('+', $answerSecond)) || (in_array('-', $answerSecond))) {
+                                                $answerSecond = plusAndMinus($answerSecond);
+                                            }
+                                        }
+                                    } elseif (!($formulaInParSecond == null)) {
+                                        $answerSecond = plusAndMinus($formulaInParSecond);
+                                    }
+                                    $answerSecond = (array)$answerSecond;
+                                }
                             }
-                            $s++;
-                        } else {
-                            // if the key of last '(' is smaller than first ')' ex ((2 * 4) + 5) * 2
+                        }
+                        //combine first half and second half using the separating operator
+                        $formulaArr = array_merge($answerFirst, $separateOperatorCalc, $answerSecond);
+                    } else {
+                        // if the last '(' is smaller than first ')' ex ((2 * 4) + 5) * 2
+                        // count the number of ()
+                        $elementCounts = array_count_values($formulaArr);
+                        $openParNum = $elementCounts['('];
+
+                        // repeat as many as ()
+                        $t = 0;
+                        while ($t < $openParNum) {
+                            // prepare several variables
+                            $openPar = '(';
+                            $closePar = ')';
+                            $openKeys = array_keys($formulaArr, $openPar);
+                            $closeKeys = array_keys($formulaArr, $closePar);
+                            $openKeysLast = end($openKeys);
+                            $closeKeysFirst = array_values($closeKeys)[0];
+
+                            // put formula inside () into []
                             $formulaInPar = [];
                             for ($i = $openKeysLast + 1; $i < $closeKeysFirst; $i++) {
                                 $formulaInPar[] = $formulaArr[$i];
                             }
 
+                            // calculate inside the formula
                             if ((in_array('*', $formulaInPar)) || (in_array('/', $formulaInPar))) {
                                 if (!(multipleAndDivide($formulaInPar)[1] == null)) {
                                     $formulaInParAns = multipleAndDivide($formulaInPar)[0];
@@ -189,11 +336,13 @@
                                 $formulaInParAns = plusAndMinus($formulaInPar);
                             }
 
+                            // if the answer is array, extract the answer
                             if (is_array($formulaInParAns)) {
                                 $formulaInParAns = $formulaInParAns[0];
                             }
 
-                            if (!($formulaArr == null)) {
+                            // replace ( ) and inside formula with the answer 
+                            if (isset($formulaArr)) {
                                 for ($i = $openKeysLast + 1; $i <= $closeKeysFirst; $i++) {
                                     unset($formulaArr[$i]);
                                 }
@@ -202,7 +351,7 @@
                                 $formulaArr[$openKeysLast] = (string)$formulaInParAns;
                                 $formulaArr = array_merge($formulaArr);
                             }
-                            $s++;
+                            $t++;
                         }
                     }
                 }
@@ -210,7 +359,7 @@
                 $answerErr = "()の入力が不十分です";
             }
 
-            // get answer of the whole formula 
+            // get the answer of the whole formula 
             if (!($formulaArr == null) && ($answerErr == null)) {
                 if ((in_array('*', $formulaArr)) || (in_array('/', $formulaArr))) {
                     if (!(multipleAndDivide($formulaArr)[1]) == null) {
@@ -236,10 +385,6 @@
             if (is_array($answer)) {
                 $answer = $answer[0];
             }
-
-            echo '<pre>';
-            var_dump($answer);
-            exit;
 
             // insert data
             try {
