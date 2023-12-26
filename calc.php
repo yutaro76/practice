@@ -72,3 +72,66 @@ function plusAndMinus($formulaArr)
     }
     return $answer;
 }
+
+function calcInsideFormula($calcInside)
+{
+    if ((in_array('*', $calcInside)) || (in_array('/', $calcInside))) {
+        if (!(multipleAndDivide($calcInside)[1] == null)) {
+            $calcInsideAns = multipleAndDivide($calcInside)[0];
+            $answerErr = multipleAndDivide($calcInside)[1];
+            $formulaArr = '';
+        } else {
+            $calcInsideAns = multipleAndDivide($calcInside)[0];
+            if ((in_array('+', $calcInsideAns)) || (in_array('-', $calcInsideAns))) {
+                $calcInsideAns = plusAndMinus($calcInsideAns);
+            }
+        }
+    } else {
+        $calcInsideAns = plusAndMinus($calcInside);
+    }
+
+    // if the answer is array, extract the answer
+    if (is_array($calcInsideAns)) {
+        $calcInsideAns = $calcInsideAns[0];
+    }
+
+    return $calcInsideAns;
+}
+
+function calcInsideFormulaWithPar($calcInsideWithPar)
+{
+    $elementCounts = array_count_values($calcInsideWithPar);
+    $openParNumFirst = $elementCounts['('];
+
+    // repeat as many as ()
+    $s = 0;
+    while ($s < $openParNumFirst) {
+        $openPar = '(';
+        $closePar = ')';
+        $openKeys = array_keys($calcInsideWithPar, $openPar);
+        $closeKeys = array_keys($calcInsideWithPar, $closePar);
+        $openKeysLast = end($openKeys);
+        $closeKeysFirst = array_values($closeKeys)[0];
+
+        // put formula inside () into []
+        $calcInsideWithParInside = [];
+        for ($k = $openKeysLast + 1; $k < $closeKeysFirst; $k++) {
+            $calcInsideWithParInside[] = $calcInsideWithPar[$k];
+        }
+
+        $calcInsideWithParInsideAns = calcInsideFormula($calcInsideWithParInside);
+        if (!($calcInsideWithPar == null)) {
+            for ($k = $openKeysLast + 1; $k <= $closeKeysFirst; $k++) {
+                unset($calcInsideWithPar[$k]);
+            }
+            $calcInsideWithPar = array_merge($calcInsideWithPar);
+            $openKeysLast = end($openKeys);
+            $calcInsideWithPar[$openKeysLast] = (string)$calcInsideWithParInsideAns;
+            $calcInsideWithPar = array_merge($calcInsideWithPar);
+        }
+
+        $s++;
+    }
+
+    return $calcInsideWithPar;
+}
