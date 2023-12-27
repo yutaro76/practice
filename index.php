@@ -118,121 +118,32 @@
                     $separateOperator = [];
                     $separateOperatorCalc = [];
                     $answerErr = '';
+                    $openPars = ['(', '('];
+                    $closePars = [')', ')'];
                     if ($openKeysLast > $closeKeysFirst) {
+
                         // if the last '(' is bigger than first ')' ex (((((1 + 2) + 3) + 4) + 5) + 6) + (10 * 2)
-                        // check the combination of " ) operator ( "
-                        for ($i = 0; $i < count($formulaArr) - 2; $i++) {
-                            if (
-                                $formulaArr[$i] == ')' && $formulaArr[$i + 1] == '+' && $formulaArr[$i + 2] == '('
-                                ||
-                                $formulaArr[$i] == ')' && $formulaArr[$i + 1] == '-' && $formulaArr[$i + 2] == '('
-                                ||
-                                $formulaArr[$i] == ')' && $formulaArr[$i + 1] == '*' && $formulaArr[$i + 2] == '('
-                                ||
-                                $formulaArr[$i] == ')' && $formulaArr[$i + 1] == '/' && $formulaArr[$i + 2] == '('
-                            ) {
-                                // put the key of separating operator into array
-                                $separateOperator[] = $i + 1;
-                                $separateOperatorCalc[] = $formulaArr[$i + 1];
-                            }
-                        }
-                        // if the formula can be separeted into two
-                        if (count($separateOperator) == 1) {
-                            // extract first formula and calculate
-                            $formulaInParFirst = [];
-                            for ($i = 1; $i < $separateOperator[0] - 1; $i++) {
-                                $formulaInParFirst[] = $formulaArr[$i];
-                            }
-                            $elementCounts = array_count_values($formulaInParFirst);
-                            if (isset($elementCounts['('])) {
-                                $firstAnswer[] = calcInsideFormula(calcInsideFormulaWithPar($formulaInParFirst));
-                            } else {
-                                $firstAnswer[] = calcInsideFormula($formulaInParFirst);
-                            }
+                        // check if there are multiple () inside ()
+                        $openParsPosition  = findParsPosision($formulaArr, $openPars);
+                        $closeParsPosition  = findParsPosision($formulaArr, $closePars);
 
-                            // extract last formula and calculate
-                            $formulaInParLast = [];
-                            for ($i = $separateOperator[0] + 2; $i < array_key_last($formulaArr); $i++) {
-                                $formulaInParLast[] = $formulaArr[$i];
+                        // if there are multiple () inside () ex ((2 + 1) * (2 + 2) * (2 + 3)*(3 + 2)) * 2
+                        // extract inside ()
+                        if ($openParsPosition !== -1 && $closeParsPosition !== -1) {
+                            for ($i = $openParsPosition + 1; $i < $closeParsPosition + 1; $i++) {
+                                $formulaInPar[] = $formulaArr[$i];
                             }
-                            $elementCounts = array_count_values($formulaInParLast);
-                            if (isset($elementCounts['('])) {
-                                $lastAnswer[] = calcInsideFormula(calcInsideFormulaWithPar($formulaInParLast));
-                            } else {
-                                $lastAnswer[] = calcInsideFormula($formulaInParLast);
+                            // calculate inside ()
+                            $formulaInParAns = calcInsideFormula(calcMultiParsAndAperators($formulaInPar));
+                            // replace ) and answer
+                            $formulaArr[$closeParsPosition + 1] = $formulaInParAns;
+                            // delete inside ()
+                            for ($i = $openParsPosition; $i < $closeParsPosition + 1; $i++) {
+                                unset($formulaArr[$i]);
                             }
-
-                            // combine first half and second half using the separating operator
-                            $formulaArr = array_merge($firstAnswer, $separateOperatorCalc, $lastAnswer);
+                            $formulaArr = array_merge($formulaArr);
                         } else {
-                            // if the formula can be separated into more than three
-                            $j = 0;
-                            $formulaInParBetweenOuter = [];
-                            $formulaInParBetween = [];
-                            while ($j <= count($separateOperator)) {
-
-                                switch ($j) {
-                                        // extract first formula and calculate
-                                    case $j == $separateOperator[0]:
-                                        $formulaInParFirst = [];
-                                        for ($i = 1; $i < $separateOperator[0] - 1; $i++) {
-                                            $formulaInParFirst[] = $formulaArr[$i];
-                                        }
-                                        $elementCounts = array_count_values($formulaInParFirst);
-                                        if (isset($elementCounts['('])) {
-                                            $firstAnswer[] = calcInsideFormula(calcInsideFormulaWithPar($formulaInParFirst));
-                                        } else {
-                                            $firstAnswer[] = calcInsideFormula($formulaInParFirst);
-                                        }
-                                        break;
-
-                                        // extract last formula and calculate
-                                    case $j == array_key_last($separateOperator):
-                                        $formulaInParLast = [];
-                                        for ($i = $separateOperator[array_key_last($separateOperator)] + 2; $i < array_key_last($formulaArr); $i++) {
-                                            $formulaInParLast[] = $formulaArr[$i];
-                                        }
-                                        if (isset($elementCounts['('])) {
-                                            $lastAnswer[] = calcInsideFormula(calcInsideFormulaWithPar($formulaInParLast));
-                                        } else {
-                                            $lastAnswer[] = calcInsideFormula($formulaInParLast);
-                                        }
-                                        break;
-
-                                        // extract other formulas 
-                                    default:
-                                        if (count($formulaInParBetweenOuter) == 0) {
-                                            for ($k = 0; $k < count($separateOperator) - 1; $k++) {
-                                                for ($l = $separateOperator[$k] + 2; $l < $separateOperator[$k + 1] - 1; $l++) {
-                                                    $formulaInParBetween[] = $formulaArr[$l];
-                                                }
-                                                $formulaInParBetweenOuter[] = $formulaInParBetween;
-                                                $formulaInParBetween = [];
-                                            }
-                                        }
-                                }
-                                $j++;
-                            }
-                            // calculate other formulas
-                            for ($m = 0; $m < count($formulaInParBetweenOuter); $m++) {
-                                $formulaInParBetweenOuterAns[] = (string)calcInsideFormula(($formulaInParBetweenOuter[$m]));
-                            }
-
-                            // merge first and last formula
-                            array_unshift($formulaInParBetweenOuterAns, (string)$firstAnswer[0]);
-                            $formulaInParBetweenOuterAns[] = (string)$lastAnswer[0];
-
-                            // merge numbers and operators
-                            $multiParFormula = [];
-                            for ($n = 0; $n < count($formulaInParBetweenOuterAns); $n++) {
-                                if ($n < count($formulaInParBetweenOuterAns)) {
-                                    $multiParFormula[] = $formulaInParBetweenOuterAns[$n];
-                                }
-                                if ($n < count($separateOperator)) {
-                                    $multiParFormula[] = $formulaArr[$separateOperator[$n]];
-                                }
-                            }
-                            $formulaArr = $multiParFormula;
+                            $formulaArr = calcMultiParsAndAperators($formulaArr);
                         }
                     } else {
                         // if the last '(' is smaller than first ')' ex ((2 * 4) + 5) * 2
